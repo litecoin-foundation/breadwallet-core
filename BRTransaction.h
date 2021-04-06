@@ -51,6 +51,9 @@ extern "C" {
 
 #define BR_RAND_MAX          ((RAND_MAX > 0x7fffffff) ? 0x7fffffff : RAND_MAX)
 
+// seed the random number generator (see below); call once.
+void BRRandInit (void);
+
 // returns a random number less than upperBound (for non-cryptographic use only)
 uint32_t BRRand(uint32_t upperBound);
 
@@ -63,12 +66,15 @@ typedef struct {
     size_t scriptLen;
     uint8_t *signature;
     size_t sigLen;
+    uint8_t *witness;
+    size_t witLen;
     uint32_t sequence;
 } BRTxInput;
 
 void BRTxInputSetAddress(BRTxInput *input, const char *address);
 void BRTxInputSetScript(BRTxInput *input, const uint8_t *script, size_t scriptLen);
 void BRTxInputSetSignature(BRTxInput *input, const uint8_t *signature, size_t sigLen);
+void BRTxInputSetWitness(BRTxInput *input, const uint8_t *witness, size_t witLen);
 
 typedef struct {
     char address[75];
@@ -77,7 +83,7 @@ typedef struct {
     size_t scriptLen;
 } BRTxOutput;
 
-#define BR_TX_OUTPUT_NONE ((BRTxOutput) { "", 0, NULL, 0 })
+#define BR_TX_OUTPUT_NONE ((const BRTxOutput) { "", 0, NULL, 0 })
 
 // when creating a BRTxOutput struct outside of a BRTransaction, set address or script to NULL when done to free memory
 void BRTxOutputSetAddress(BRTxOutput *output, const char *address);
@@ -85,6 +91,7 @@ void BRTxOutputSetScript(BRTxOutput *output, const uint8_t *script, size_t scrip
 
 typedef struct {
     UInt256 txHash;
+    UInt256 wtxHash;
     uint32_t version;
     BRTxInput *inputs;
     size_t inCount;
@@ -112,7 +119,7 @@ size_t BRTransactionSerialize(const BRTransaction *tx, uint8_t *buf, size_t bufL
 // adds an input to tx
 void BRTransactionAddInput(BRTransaction *tx, UInt256 txHash, uint32_t index, uint64_t amount,
                            const uint8_t *script, size_t scriptLen, const uint8_t *signature, size_t sigLen,
-                           uint32_t sequence);
+                           const uint8_t *witness, size_t witLen, uint32_t sequence);
 
 // adds an output to tx
 void BRTransactionAddOutput(BRTransaction *tx, uint64_t amount, const uint8_t *script, size_t scriptLen);
@@ -123,7 +130,10 @@ void BRTransactionShuffleOutputs(BRTransaction *tx);
 // size in bytes if signed, or estimated size assuming compact pubkey sigs
 size_t BRTransactionSize(const BRTransaction *tx);
 
-// minimum transaction fee needed for tx to relay across the bitcoin network
+// virtual transaction size as defined by BIP141: https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
+size_t BRTransactionVSize(const BRTransaction *tx);
+
+// minimum transaction fee needed for tx to relay across the bitcoin network (bitcoind 0.12 default min-relay fee-rate)
 uint64_t BRTransactionStandardFee(const BRTransaction *tx);
 
 // checks if all signatures exist, but does not verify them

@@ -26,6 +26,7 @@
 #define BRChainParams_h
 
 #include "BRMerkleBlock.h"
+#include "BRPeer.h"
 #include "BRSet.h"
 #include <assert.h>
 
@@ -119,7 +120,7 @@ static const BRChainParams BRMainNetParams = {
     BRMainNetDNSSeeds,
     9333,       // standardPort
     0xdbb6c0fb, // magicNumber
-    0,          // services
+    SERIVCES_NODE_WITNESS,          // services
     BRMainNetVerifyDifficulty,
     BRMainNetCheckpoints,
     sizeof(BRMainNetCheckpoints) / sizeof(*BRMainNetCheckpoints)};
@@ -128,7 +129,7 @@ static const BRChainParams BRTestNetParams = {
     BRTestNetDNSSeeds,
     19335,      // standardPort
     0xf1c8d2fd, // magicNumber
-    0,          // services
+    SERIVCES_NODE_WITNESS,          // services
     BRTestNetVerifyDifficulty,
     BRTestNetCheckpoints,
     sizeof(BRTestNetCheckpoints) / sizeof(*BRTestNetCheckpoints)};
